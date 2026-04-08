@@ -11,6 +11,22 @@ const Contact = () => {
             <h4>Connect</h4>
             <p>
               <a
+                href="tel:+15186458279"
+                data-cursor="disable"
+              >
+                Phone — +1 5186458279
+              </a>
+            </p>
+            <p>
+              <a
+                href="mailto:sumeetbabelalv@gmail.com"
+                data-cursor="disable"
+              >
+                Email — sumeetbabelalv@gmail.com
+              </a>
+            </p>
+            <p>
+              <a
                 href="https://svish001.github.io/portfolio/"
                 target="_blank"
                 rel="noreferrer"

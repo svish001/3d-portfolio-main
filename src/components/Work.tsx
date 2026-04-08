@@ -10,26 +10,29 @@ const projects = [
     title: "IS - Bank Management System",
     category: "Java + MySQL Banking Application",
     tools: "Java, MySQL, OOP, Secure account workflows, Transaction handling",
-    image: `${baseUrl}images/placeholder.webp`,
+    image: `${baseUrl}images/sapphire.png`,
+    link: "https://github.com/svish001",
   },
   {
     title: "Bulky Burghy (Memorial Gym Platform)",
     category: "Full-Stack Campus Fitness Web Platform",
     tools: "Python, Flask, React, Authentication, Real-time crowd meter, UX",
-    image: `${baseUrl}images/placeholder.webp`,
+    image: `${baseUrl}images/callhq.png`,
     link: "https://svish001.github.io/portfolio/",
   },
   {
     title: "Classic Tetris Game Implementation",
     category: "C++ Console Game Engine",
     tools: "C++, OOP, collision detection, game loop, scoring, optimization",
-    image: `${baseUrl}images/placeholder.webp`,
+    image: `${baseUrl}images/orrdr.png`,
+    link: "https://github.com/svish001",
   },
   {
     title: "Study-Website",
     category: "Productivity Web App",
     tools: "HTML, CSS, JavaScript, localStorage, responsive design",
-    image: `${baseUrl}images/placeholder.webp`,
+    image: `${baseUrl}images/radix.png`,
+    link: "https://github.com/svish001",
   },
 ];
 
