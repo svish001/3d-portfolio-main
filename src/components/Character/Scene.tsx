@@ -13,6 +13,58 @@ import {
 import setAnimations from "./utils/animationUtils";
 import { setProgress } from "../Loading";
 
+const createGlasses = () => {
+  const glasses = new THREE.Group();
+
+  const frameMaterial = new THREE.MeshStandardMaterial({
+    color: "#111111",
+    roughness: 0.35,
+    metalness: 0.45,
+  });
+
+  const lensMaterial = new THREE.MeshPhysicalMaterial({
+    color: "#9ed0ff",
+    transparent: true,
+    opacity: 0.12,
+    roughness: 0.1,
+    transmission: 0.85,
+    thickness: 0.025,
+  });
+
+  const rimGeometry = new THREE.TorusGeometry(0.15, 0.015, 10, 32);
+  const lensGeometry = new THREE.CircleGeometry(0.135, 32);
+  const bridgeGeometry = new THREE.CylinderGeometry(0.01, 0.01, 0.11, 12);
+  const armGeometry = new THREE.CylinderGeometry(0.009, 0.009, 0.22, 8);
+
+  const leftRim = new THREE.Mesh(rimGeometry, frameMaterial);
+  const rightRim = new THREE.Mesh(rimGeometry, frameMaterial);
+  leftRim.position.set(-0.18, 0, 0);
+  rightRim.position.set(0.18, 0, 0);
+
+  const leftLens = new THREE.Mesh(lensGeometry, lensMaterial);
+  const rightLens = new THREE.Mesh(lensGeometry, lensMaterial);
+  leftLens.position.set(-0.18, 0, 0.012);
+  rightLens.position.set(0.18, 0, 0.012);
+
+  const bridge = new THREE.Mesh(bridgeGeometry, frameMaterial);
+  bridge.rotation.z = Math.PI / 2;
+  bridge.position.z = 0.002;
+
+  const leftArm = new THREE.Mesh(armGeometry, frameMaterial);
+  const rightArm = new THREE.Mesh(armGeometry, frameMaterial);
+  leftArm.rotation.x = Math.PI / 2;
+  rightArm.rotation.x = Math.PI / 2;
+  leftArm.position.set(-0.32, -0.015, -0.09);
+  rightArm.position.set(0.32, -0.015, -0.09);
+
+  glasses.add(leftRim, rightRim, leftLens, rightLens, bridge, leftArm, rightArm);
+  glasses.position.set(0, 0.19, 0.53);
+  glasses.rotation.x = 0.04;
+  glasses.name = "hero-glasses";
+
+  return glasses;
+};
+
 const Scene = () => {
   const canvasDiv = useRef<HTMLDivElement | null>(null);
   const hoverDivRef = useRef<HTMLDivElement>(null);
@@ -29,10 +81,11 @@ const Scene = () => {
 
       const renderer = new THREE.WebGLRenderer({
         alpha: true,
-        antialias: true,
+        antialias: false,
+        powerPreference: "high-performance",
       });
       renderer.setSize(container.width, container.height);
-      renderer.setPixelRatio(window.devicePixelRatio);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
       renderer.toneMapping = THREE.ACESFilmicToneMapping;
       renderer.toneMappingExposure = 1;
       canvasDiv.current.appendChild(renderer.domElement);
@@ -62,6 +115,9 @@ const Scene = () => {
           setChar(character);
           scene.add(character);
           headBone = character.getObjectByName("spine006") || null;
+          if (headBone && !headBone.getObjectByName("hero-glasses")) {
+            headBone.add(createGlasses());
+          }
           screenLight = character.getObjectByName("screenlight") || null;
           progress.loaded().then(() => {
             setTimeout(() => {
@@ -69,9 +125,6 @@ const Scene = () => {
               animations.startIntro();
             }, 2500);
           });
-          window.addEventListener("resize", () =>
-            handleResize(renderer, camera, canvasDiv, character)
-          );
         }
       }).catch((error) => {
         console.error("Character model failed to load", error);
@@ -79,20 +132,25 @@ const Scene = () => {
         setIsLoading(false);
       });
 
+      const onResize = () => {
+        if (!character) return;
+        handleResize(renderer, camera, canvasDiv, character);
+      };
+      window.addEventListener("resize", onResize);
+
       let mouse = { x: 0, y: 0 },
         interpolation = { x: 0.1, y: 0.2 };
 
       const onMouseMove = (event: MouseEvent) => {
         handleMouseMove(event, (x, y) => (mouse = { x, y }));
       };
-      let debounce: number | undefined;
+      const onTouchMove = (event: TouchEvent) => {
+        handleTouchMove(event, (x, y) => (mouse = { x, y }));
+      };
+
       const onTouchStart = (event: TouchEvent) => {
         const element = event.target as HTMLElement;
-        debounce = setTimeout(() => {
-          element?.addEventListener("touchmove", (e: TouchEvent) =>
-            handleTouchMove(e, (x, y) => (mouse = { x, y }))
-          );
-        }, 200);
+        element?.addEventListener("touchmove", onTouchMove, { passive: true });
       };
 
       const onTouchEnd = () => {
@@ -102,16 +160,16 @@ const Scene = () => {
         });
       };
 
-      document.addEventListener("mousemove", (event) => {
-        onMouseMove(event);
-      });
+      document.addEventListener("mousemove", onMouseMove);
       const landingDiv = document.getElementById("landingDiv");
       if (landingDiv) {
-        landingDiv.addEventListener("touchstart", onTouchStart);
+        landingDiv.addEventListener("touchstart", onTouchStart, {
+          passive: true,
+        });
         landingDiv.addEventListener("touchend", onTouchEnd);
       }
-      const animate = () => {
-        requestAnimationFrame(animate);
+
+      renderer.setAnimationLoop(() => {
         if (headBone) {
           handleHeadRotation(
             headBone,
@@ -128,21 +186,20 @@ const Scene = () => {
           mixer.update(delta);
         }
         renderer.render(scene, camera);
-      };
-      animate();
+      });
+
       return () => {
-        clearTimeout(debounce);
+        renderer.setAnimationLoop(null);
         scene.clear();
         renderer.dispose();
-        window.removeEventListener("resize", () =>
-          handleResize(renderer, camera, canvasDiv, character!)
-        );
+        window.removeEventListener("resize", onResize);
         if (canvasDiv.current) {
           canvasDiv.current.removeChild(renderer.domElement);
         }
         if (landingDiv) {
           document.removeEventListener("mousemove", onMouseMove);
           landingDiv.removeEventListener("touchstart", onTouchStart);
+          landingDiv.removeEventListener("touchmove", onTouchMove);
           landingDiv.removeEventListener("touchend", onTouchEnd);
         }
       };
