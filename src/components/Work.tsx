@@ -3,31 +3,33 @@ import "./styles/Work.css";
 import WorkImage from "./WorkImage";
 import { MdArrowBack, MdArrowForward } from "react-icons/md";
 
+const baseUrl = import.meta.env.BASE_URL;
+
 const projects = [
   {
     title: "IS - Bank Management System",
     category: "Java + MySQL Banking Application",
     tools: "Java, MySQL, OOP, Secure account workflows, Transaction handling",
-    image: "/images/placeholder.webp",
+    image: `${baseUrl}images/placeholder.webp`,
   },
   {
     title: "Bulky Burghy (Memorial Gym Platform)",
     category: "Full-Stack Campus Fitness Web Platform",
     tools: "Python, Flask, React, Authentication, Real-time crowd meter, UX",
-    image: "/images/placeholder.webp",
+    image: `${baseUrl}images/placeholder.webp`,
     link: "https://svish001.github.io/portfolio/",
   },
   {
     title: "Classic Tetris Game Implementation",
     category: "C++ Console Game Engine",
     tools: "C++, OOP, collision detection, game loop, scoring, optimization",
-    image: "/images/placeholder.webp",
+    image: `${baseUrl}images/placeholder.webp`,
   },
   {
     title: "Study-Website",
     category: "Productivity Web App",
     tools: "HTML, CSS, JavaScript, localStorage, responsive design",
-    image: "/images/placeholder.webp",
+    image: `${baseUrl}images/placeholder.webp`,
   },
 ];
 
