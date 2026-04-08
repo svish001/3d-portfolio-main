@@ -58,11 +58,30 @@ const createGlasses = () => {
   rightArm.position.set(0.32, -0.015, -0.09);
 
   glasses.add(leftRim, rightRim, leftLens, rightLens, bridge, leftArm, rightArm);
-  glasses.position.set(0, 0.19, 0.53);
-  glasses.rotation.x = 0.04;
+  glasses.position.set(0, 0.03, 0.16);
+  glasses.rotation.x = 0.02;
+  glasses.scale.setScalar(1.2);
   glasses.name = "hero-glasses";
 
   return glasses;
+};
+
+const findBestBone = (character: THREE.Object3D, candidates: string[]) => {
+  for (const boneName of candidates) {
+    const found = character.getObjectByName(boneName);
+    if (found) return found;
+  }
+
+  let fallback: THREE.Object3D | null = null;
+  character.traverse((node) => {
+    if (fallback) return;
+    const lowerName = node.name.toLowerCase();
+    if (candidates.some((candidate) => lowerName.includes(candidate.toLowerCase()))) {
+      fallback = node;
+    }
+  });
+
+  return fallback;
 };
 
 const Scene = () => {
@@ -96,7 +115,8 @@ const Scene = () => {
       camera.zoom = 1.1;
       camera.updateProjectionMatrix();
 
-      let headBone: THREE.Object3D | null = null;
+      let lookBone: THREE.Object3D | null = null;
+      let glassesBone: THREE.Object3D | null = null;
       let screenLight: any | null = null;
       let mixer: THREE.AnimationMixer;
 
@@ -114,10 +134,14 @@ const Scene = () => {
           let character = gltf.scene;
           setChar(character);
           scene.add(character);
-          headBone = character.getObjectByName("spine006") || null;
-          if (headBone && !headBone.getObjectByName("hero-glasses")) {
-            headBone.add(createGlasses());
+
+          lookBone = findBestBone(character, ["spine006", "neck", "head"]);
+          glassesBone = findBestBone(character, ["head", "face", "spine006", "neck"]);
+
+          if (glassesBone && !glassesBone.getObjectByName("hero-glasses")) {
+            glassesBone.add(createGlasses());
           }
+
           screenLight = character.getObjectByName("screenlight") || null;
           progress.loaded().then(() => {
             setTimeout(() => {
@@ -170,9 +194,9 @@ const Scene = () => {
       }
 
       renderer.setAnimationLoop(() => {
-        if (headBone) {
+        if (lookBone) {
           handleHeadRotation(
-            headBone,
+            lookBone,
             mouse.x,
             mouse.y,
             interpolation.x,
